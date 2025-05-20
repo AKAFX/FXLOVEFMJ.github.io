@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>致 冯曼珈</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Serif SC', serif, 'Microsoft YaHei', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+            background-color: transparent;
+        }
+        
+        /* 视频背景 */
+        .background-video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .background-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.4; /* 低透明度 */
+        }
+        
+        .background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* 半透明黑色覆盖层 */
+        }
+        
+        /* 电影开幕动画 */
+        .curtain-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            background-color: #000;
+        }
+        
+        .curtain-top, .curtain-bottom {
+            width: 100%;
+            height: 50%;
+            background-color: #000;
+            transition: height 3s ease-in-out;
+        }
+        
+        .curtain-top.open {
+            height: 0;
+        }
+        
+        .curtain-bottom.open {
+            height: 0;
+        }
+        
+        /* 主要内容区域 */
+        .content {
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content.visible {
+            opacity: 1;
+        }
+        
+        /* 海岸线和车辆场景 */
+        .hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.5));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 2rem;
+            pointer-events: none; /* 允许点击事件穿透到视频控件 */
+        }
+        
+        .hero-overlay * {
+            pointer-events: auto; /* 恢复标题等元素的点击事件 */
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeIn 1.5s ease-out forwards;
+            animation-delay: 4s;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1.5s ease-out forwards;
+            animation-delay: 4.5s;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 内容区块样式 */
+        .section {
+            min-height: 100vh;
+            padding: 6rem 2rem;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* 内容区块的半透明背景，让视频背景若隐若现 */
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .image-text-block {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            margin: 4rem 0;
+            backdrop-filter: blur(5px); /* 模糊效果 */
+            background-color: rgba(0, 0, 0, 0.4); /* 半透明背景 */
+            border-radius: 8px;
+            overflow: hidden; /* 确保圆角正确显示 */
+        }
+        
+        .image-text-block:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+        
+        .image-container {
+            flex: 1;
+            overflow: hidden;
+            border-radius: 4px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: auto;
+            transition: transform 0.5s ease;
+        }
+        
+        .image-container:hover img {
+            transform: scale(1.05);
+        }
+        
+        .text-container {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .text-container h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #b8c5ea;
+        }
+        
+        .text-container p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        
+        /* 滚动动画 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 底部样式 */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .image-text-block, .image-text-block:nth-child(even) {
+                flex-direction: column;
+            }
+            
+            .text-container {
+                padding: 1.5rem 0;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 背景视频 -->
+    <div class="background-video-container">
+        <video class="background-video" autoplay loop muted>
+            <source src="Videos/null.mp4" type="video/mp4">
+        </video>
+        <div class="background-overlay"></div>
+    </div>
+
+    <!-- 开幕幕布效果 -->
+    <div class="curtain-container">
+        <div class="curtain-top"></div>
+        <div class="curtain-bottom"></div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="content">
+        <!-- 开场视频/图片 -->
+        <section class="hero">
+            <!-- 在这里放置海岸线和车辆的视频或动态图片 -->
+            <video class="hero-video" autoplay loop controls>
+                <source src="Videos/null.mp4" type="video/mp4">
+                <!-- 备用图片 -->
+                <img src="images/微信图片_20250520102607.jpg" alt="海岸线和行驶的车辆">
+            </video>
+            
+            <div class="hero-overlay">
+                <h1 class="hero-title">致 冯曼珈</h1>
+                <p class="hero-subtitle">一封写给你的情书</p>
+            </div>
+        </section>
+        
+        <!-- 内容区块 - 可以根据需要添加更多 -->
+        <section class="section">
+            <div class="container">
+                <div class="image-text-block fade-in">
+                    <div class="image-container">
+                        <img src="images/微信图片_20250520102700.jpg" alt="你们的回忆照片">
+                    </div>
+                    <div class="text-container">
+                        <h2>我想见你如金桔日落</h2>
+                        <p>从我第一次见到你的那一刻起，世界仿佛以一种全新的方式向我敞开。像远方的海浪轻抚岸边，你的存在让我感受到了前所未有的宁静与热烈。</p>
+                        <p>如果可以选择，我愿在每一个清晨醒来时，第一眼看到的都是你。就像顾城所写："我们站着，不说话，就十分美好。"</p>
+                    </div>
+                </div>
+                
+                <div class="image-text-block fade-in">
+                    <div class="image-container">
+                        <img src="images/微信图片_20250520102628.jpg" alt="你们的回忆照片">
+                    </div>
+                    <div class="text-container">
+                        <h2>黑夜给了我黑色的眼睛，我却用它寻找光明</h2>
+                        <p>在看似平凡的日子里，每一个与你共度的时刻都闪烁着不平凡的光芒。你是我生命中最明亮的那束光，照亮了我所有的黑暗角落。</p>
+                        <p>如果爱可以被描述，那么它一定是像海一样深沉，又像天空一样广阔的存在。而我愿意用余生的时间，去丈量这份感情的深度与广度。</p>
+                    </div>
+                </div>
+                
+                <div class="image-text-block fade-in">
+                    <div class="image-container">
+                        <img src="images/微信图片_20250520102656.jpg" alt="你们的回忆照片">
+                    </div>
+                    <div class="text-container">
+                        <h2>你，一会看我，一会看云</h2>
+                        <p>每当我们并肩而行，你的目光时而落在我身上，时而望向远方，那一刻我便明白，爱是既亲密又自由的存在。</p>
+                        <p>曼珈，如果可以，我想牵着你的手走过春夏秋冬，看遍世间所有美景，感受生命中每一次心动的瞬间。在这个广阔的世界里，我最想探索的，是你内心的广袤无垠的天地。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 结尾部分 -->
+        <section class="section">
+            <div class="container" style="text-align: center;">
+                <h2 class="fade-in" style="font-size: 2.5rem; margin-bottom: 2rem;">冯曼珈，我爱你</h2>
+                <p class="fade-in" style="font-size: 1.3rem; max-width: 700px; margin: 0 auto;">
+                    如果你愿意，请让我成为那个陪你看日出日落的人。在每次朝阳起又落的时空，我们操控失控的时间撞向繁花似锦的未来。
+                </p>
+            </div>
+        </section>
+        
+        <footer>
+            <p>&copy; 2025 致 冯曼珈</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取视频元素
+            const videoElement = document.querySelector('.hero-video');
+            const backgroundVideo = document.querySelector('.background-video');
+            
+            // 确保主视频不是静音状态
+            videoElement.muted = false;
+            
+            // 尝试播放视频
+            const playPromise = videoElement.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    // 自动播放成功
+                    console.log('视频自动播放成功，包含声音');
+                })
+                .catch(error => {
+                    // 自动播放被阻止
+                    console.log('自动播放被阻止，可能需要用户交互');
+                    
+                    // 添加点击事件，让用户点击页面任意位置开始播放视频
+                    document.addEventListener('click', function playVideoOnClick() {
+                        videoElement.play();
+                        document.removeEventListener('click', playVideoOnClick);
+                    }, { once: true });
+                });
+            }
+            
+            // 确保背景视频播放
+            backgroundVideo.play().catch(error => {
+                console.log('背景视频自动播放可能被阻止，但这没关系，因为它是静音的');
+            });
+            
+            // 开幕幕布动画
+            setTimeout(() => {
+                document.querySelector('.curtain-top').classList.add('open');
+                document.querySelector('.curtain-bottom').classList.add('open');
+                
+                // 幕布完全打开后显示内容
+                setTimeout(() => {
+                    document.querySelector('.content').classList.add('visible');
+                    document.querySelector('.curtain-container').style.display = 'none';
+                }, 3000);
+            }, 1000);
+            
+            // 滚动动画
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            // 监听所有需要淡入的元素
+            document.querySelectorAll('.fade-in').forEach(element => {
+                observer.observe(element);
+            });
+        });
+    </script>
+</body>
+</html>
